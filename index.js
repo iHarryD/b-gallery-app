@@ -12,12 +12,30 @@ server.use(cors());
 server.use(express.json());
 
 server.get("/", async (req, res) => {
+  const searchQuery = req.query.query;
+  const requestedPageNumber = req.query.page ? parseInt(req.query.page) : 1;
+  const numbersOfResultInEachPage = 9;
   try {
-    images.find({}, (err, doc) => {
+    const filterQuery = {};
+    if (searchQuery) {
+      filterQuery.imageName = { $regex: searchQuery, $options: "gi" };
+    }
+    images.find(filterQuery, (err, doc) => {
       if (err) throw new Error();
+      const result = {
+        result: doc.slice(
+          (requestedPageNumber - 1) * numbersOfResultInEachPage,
+          requestedPageNumber * numbersOfResultInEachPage
+        ),
+        thisPage: requestedPageNumber,
+        nextPage:
+          doc.length > requestedPageNumber * numbersOfResultInEachPage
+            ? requestedPageNumber + 1
+            : null,
+      };
       return res
         .status(200)
-        .send({ message: "Images fetched successfully.", data: doc });
+        .send({ message: "Images fetched successfully.", data: result });
     });
   } catch (err) {
     return res
