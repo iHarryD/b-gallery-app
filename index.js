@@ -123,4 +123,4 @@ server.delete("/delete/:id", async (req, res) => {
   }
 });
 
-server.listen(3001);
+server.listen(process.env.PORT || 3001);
